@@ -1,0 +1,8 @@
+version: '3.4'
+services:
+  ocrserver:
+    container_name: ocrserver
+    image: otiai10/ocrserver:latest
+    ports:
+      - 127.0.0.1:8080:8080
+ 
