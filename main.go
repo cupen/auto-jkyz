@@ -4,7 +4,10 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"log"
 	"os"
+	"os/exec"
+	"path/filepath"
 	"time"
 
 	"github.com/chromedp/chromedp"
@@ -13,9 +16,7 @@ import (
 	"github.com/pelletier/go-toml"
 )
 
-const (
-	URL_OF_Login = "https://hk.sz.gov.cn:8118/userPage/login"
-)
+const ()
 
 var (
 	devtoolsWsURL = flag.String("devtools-ws-url", "ws://localhost:9222/devtools/browser", "DevTools WebSsocket URL")
@@ -25,13 +26,14 @@ var (
 func main() {
 	parse_cli()
 	conf := parse_conf(*fpath)
+	start_chrome(conf)
 	allocatorContext, cancel := chromedp.NewRemoteAllocator(context.Background(), *devtoolsWsURL)
 	defer cancel()
 
 	root, cancel := chromedp.NewContext(allocatorContext)
 	defer cancel()
 
-	err := actions.Login(root, URL_OF_Login, conf.Account)
+	err := actions.Login(root, conf.Account)
 	panicIf(err)
 
 	time.Sleep(60 * 10 * time.Second)
@@ -54,6 +56,19 @@ func parse_conf(fpath string) *config.Config {
 	err = toml.Unmarshal(data, &conf)
 	panicIf(err)
 	return &conf
+}
+
+func start_chrome(cfg *config.Config) {
+	profileDir := filepath.Join(os.TempDir(), "auto-jkyz")
+	args := []string{
+		"--remote-debugging-port=9222",
+		"--user-data-dir=" + profileDir,
+	}
+	cmd := exec.Command(cfg.Chrome.GetPath(), args...)
+	if err := cmd.Start(); err != nil {
+		panic(err)
+	}
+	log.Printf("started chrome with profile directory: %s", profileDir)
 }
 
 func panicIf(err error) {

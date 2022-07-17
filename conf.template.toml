@@ -2,3 +2,6 @@
 idtype="1"
 username="hello"
 password="world"
+
+[chrome]
+path="C:/Program Files/Google/Chrome/Application/chrome.exe"
